@@ -58,10 +58,6 @@ node dist/index.js
 结构：
 ```json
 {
-  "cloudflare": {
-    "apiToken": "全局 Cloudflare API Token",
-    "zoneId": "全局 Zone ID"
-  },
   "profiles": {
     "aws-sg": {
       "name": "aws-sg",
@@ -72,15 +68,15 @@ node dist/index.js
       "subdomain": "app.example.com",
       "proxied": false,
       "cloudflare": {
-        "apiToken": "profile 级独立 Token（可选）",
-        "zoneId": "profile 级独立 Zone ID（可选）"
+        "apiToken": "profile 级 Cloudflare API Token",
+        "zoneId": "profile 级 Zone ID"
       }
     }
   }
 }
 ```
 
-Cloudflare 凭据优先级：profile 内 `cloudflare` 字段 > 全局 `cloudflare` 字段。
+Cloudflare 凭据存储在 profile 内，不再有全局字段。每个 profile 独立绑定自己的 Cloudflare 账号。
 
 ## UI 配置表单使用约定
 
@@ -116,7 +112,7 @@ http://localhost:8787/
 - 勾选「启用 Cloudflare 域名解析」后展开 API Token + Zone ID 输入框
 - 每个 profile 可绑定独立的 Cloudflare 凭据
 
-## MCP 工具列表（14 个）
+## MCP 工具列表（13 个）
 
 ### 云平台操作（8 个，凭据即时传入）
 1. `rotate_instance_ip` — 一键轮换公网 IP
@@ -128,13 +124,12 @@ http://localhost:8787/
 7. `list_ips` — 列出已分配的公网 IP
 8. `get_instance_public_ip` — 查询实例当前公网 IP
 
-### 配置管理 + DNS（6 个，持久化保存）
-9. `save_cloudflare_config` — 保存全局 Cloudflare 配置
-10. `save_profile` — 保存云平台配置（含独立 Cloudflare 凭据）
-11. `list_profiles` — 列出所有已保存配置
-12. `delete_profile` — 删除已保存配置
-13. `update_dns` — 手动更新 Cloudflare DNS A 记录
-14. `rotate_ip_and_update_dns` — 一键：轮换 IP + 自动更新 DNS（核心工具）
+### 配置管理 + DNS（5 个，持久化保存）
+9. `save_profile` — 保存云平台配置（含独立 Cloudflare 凭据）
+10. `list_profiles` — 列出所有已保存配置
+11. `delete_profile` — 删除已保存配置
+12. `update_dns` — 手动更新 Cloudflare DNS A 记录（需传入 cfApiToken + cfZoneId）
+13. `rotate_ip_and_update_dns` — 一键：轮换 IP + 自动更新 DNS（核心工具）
 
 ## 编译注意事项
 
