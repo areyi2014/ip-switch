@@ -9,7 +9,7 @@
 import { z } from 'zod';
 import { getAdapter } from './router.js';
 import { CloudAdapterError } from './types.js';
-import { saveCloudflareConfig, getCloudflareConfig, saveProfile, deleteProfile, listProfiles, getProfile, getConfigPath, } from './config-store.js';
+import { saveProfile, deleteProfile, listProfiles, getProfile, getConfigPath, } from './config-store.js';
 import { updateDns, CloudflareError } from './adapters/cloudflare.js';
 /** 公共 schema 片段 */
 const providerSchema = z.enum(['aws', 'azure', 'oci', 'vultr'])
@@ -170,32 +170,12 @@ export function registerTools(server) {
             return formatError(err);
         }
     });
-    // ─── 9. save_cloudflare_config ───────────────────────
-    server.tool('save_cloudflare_config', 'Save Cloudflare API token and Zone ID for DNS updates. ' +
-        'This is a global config shared by all profiles. ' +
-        'Get the API token from Cloudflare dashboard > My Profile > API Tokens. ' +
-        'Get the Zone ID from any domain overview page.', {
-        apiToken: z.string().describe('Cloudflare API token'),
-        zoneId: z.string().describe('Cloudflare Zone ID for the domain'),
-    }, async ({ apiToken, zoneId }) => {
-        try {
-            saveCloudflareConfig({ apiToken, zoneId });
-            return {
-                content: [{ type: 'text', text: JSON.stringify({
-                            success: true,
-                            message: 'Cloudflare config saved',
-                            configPath: getConfigPath(),
-                        }, null, 2) }],
-            };
-        }
-        catch (err) {
-            return formatError(err);
-        }
-    });
-    // ─── 10. save_profile ────────────────────────────────
+    // ─── 9. save_profile ────────────────────────────────
     server.tool('save_profile', 'Save a cloud provider profile with credentials, region, instance ID, and a bound subdomain. ' +
         'The subdomain will be updated via Cloudflare DNS when the instance IP changes. ' +
-        'Use this to persist configuration so you do not need to pass credentials every time.', {
+        'Use this to persist configuration so you do not need to pass credentials every time. ' +
+        'Optionally save Cloudflare API token and Zone ID per profile so different subdomains ' +
+        'in different Cloudflare accounts/zones can be managed independently.', {
         name: z.string().describe('Profile name (e.g. "aws-sg", "azure-hk")'),
         provider: providerSchema,
         region: regionSchema,
@@ -203,9 +183,14 @@ export function registerTools(server) {
         credentials: credentialsSchema,
         subdomain: z.string().describe('Subdomain to bind (e.g. ty.example.com)'),
         proxied: z.boolean().default(false).describe('Enable Cloudflare proxy for this subdomain'),
-    }, async ({ name, provider, region, instanceId, credentials, subdomain, proxied }) => {
+        cfApiToken: z.string().optional().describe('Profile-specific Cloudflare API token (overrides global)'),
+        cfZoneId: z.string().optional().describe('Profile-specific Cloudflare Zone ID (overrides global)'),
+    }, async ({ name, provider, region, instanceId, credentials, subdomain, proxied, cfApiToken, cfZoneId }) => {
         try {
             const profile = { name, provider, region, instanceId, credentials, subdomain, proxied };
+            if (cfApiToken && cfZoneId) {
+                profile.cloudflare = { apiToken: cfApiToken, zoneId: cfZoneId };
+            }
             saveProfile(profile);
             return {
                 content: [{ type: 'text', text: JSON.stringify({
@@ -219,14 +204,12 @@ export function registerTools(server) {
             return formatError(err);
         }
     });
-    // ─── 11. list_profiles ───────────────────────────────
+    // ─── 10. list_profiles ───────────────────────────────
     server.tool('list_profiles', 'List all saved cloud provider profiles with their subdomain bindings. ' +
-        'Also shows whether Cloudflare DNS config is set.', {}, async () => {
+        'Also shows whether each profile has Cloudflare DNS config attached.', {}, async () => {
         const profiles = listProfiles();
-        const cf = getCloudflareConfig();
         return {
             content: [{ type: 'text', text: JSON.stringify({
-                        cloudflareConfigured: cf !== null,
                         profileCount: profiles.length,
                         profiles: profiles.map(p => ({
                             name: p.name,
@@ -235,11 +218,12 @@ export function registerTools(server) {
                             instanceId: p.instanceId,
                             subdomain: p.subdomain,
                             proxied: p.proxied,
+                            cloudflareConfigured: !!p.cloudflare,
                         })),
                     }, null, 2) }],
         };
     });
-    // ─── 12. delete_profile ──────────────────────────────
+    // ─── 11. delete_profile ──────────────────────────────
     server.tool('delete_profile', 'Delete a saved cloud provider profile by name.', {
         name: z.string().describe('Profile name to delete'),
     }, async ({ name }) => {
@@ -251,24 +235,17 @@ export function registerTools(server) {
                     }, null, 2) }],
         };
     });
-    // ─── 13. update_dns ──────────────────────────────────
+    // ─── 12. update_dns ──────────────────────────────────
     server.tool('update_dns', 'Update a Cloudflare DNS A record to point a subdomain to a new IP. ' +
-        'Requires Cloudflare config to be saved first (use save_cloudflare_config).', {
+        'Requires Cloudflare API token and Zone ID to be passed directly.', {
         subdomain: z.string().describe('Subdomain to update (e.g. ty.example.com)'),
         ip: z.string().describe('New IP address'),
         proxied: z.boolean().default(false).describe('Enable Cloudflare proxy'),
-    }, async ({ subdomain, ip, proxied }) => {
+        cfApiToken: z.string().describe('Cloudflare API token'),
+        cfZoneId: z.string().describe('Cloudflare Zone ID'),
+    }, async ({ subdomain, ip, proxied, cfApiToken, cfZoneId }) => {
         try {
-            const cf = getCloudflareConfig();
-            if (!cf) {
-                return {
-                    content: [{ type: 'text', text: JSON.stringify({
-                                success: false,
-                                error: 'Cloudflare config not set. Use save_cloudflare_config first.',
-                            }) }],
-                    isError: true,
-                };
-            }
+            const cf = { apiToken: cfApiToken, zoneId: cfZoneId };
             const result = await updateDns(cf, subdomain, ip, proxied);
             return {
                 content: [{ type: 'text', text: JSON.stringify(result, null, 2) }],
@@ -278,11 +255,10 @@ export function registerTools(server) {
             return formatError(err);
         }
     });
-    // ─── 14. rotate_ip_and_update_dns ────────────────────
+    // ─── 13. rotate_ip_and_update_dns ────────────────────
     server.tool('rotate_ip_and_update_dns', 'One-click: rotate a saved profile instance IP and update its bound subdomain DNS. ' +
         'This combines rotate_instance_ip + update_dns into a single operation. ' +
-        'The profile must be saved first (use save_profile). ' +
-        'Cloudflare config must be saved first (use save_cloudflare_config).', {
+        'The profile must be saved first (use save_profile) with Cloudflare credentials attached.', {
         profileName: z.string().describe('Saved profile name'),
     }, async ({ profileName }) => {
         try {
@@ -297,13 +273,13 @@ export function registerTools(server) {
                     isError: true,
                 };
             }
-            // Step 2: Check Cloudflare config
-            const cf = getCloudflareConfig();
+            // Step 2: Check Cloudflare config (profile-level only)
+            const cf = profile.cloudflare;
             if (!cf) {
                 return {
                     content: [{ type: 'text', text: JSON.stringify({
                                 success: false,
-                                error: 'Cloudflare config not set. Use save_cloudflare_config first.',
+                                error: 'Profile has no Cloudflare credentials. Re-save the profile with cfApiToken and cfZoneId.',
                             }) }],
                     isError: true,
                 };

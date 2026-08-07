@@ -1,19 +1,18 @@
 /**
  * Config Store — Persistent JSON configuration storage
  *
- * Stores cloud provider credentials, subdomain bindings, and Cloudflare API config
+ * Stores cloud provider profiles (with per-profile Cloudflare credentials)
  * in a JSON file at ~/.cloud-ip-rotator/config.json
  *
  * File format:
  * {
- *   "cloudflare": { "apiToken": "...", "zoneId": "..." },
  *   "profiles": {
- *     "aws-sg": { "provider": "aws", "region": "...", ... },
+ *     "aws-sg": { "provider": "aws", "region": "...", "cloudflare": { ... }, ... },
  *     ...
  *   }
  * }
  */
-import type { AppConfig, CloudflareConfig, ConfigProfile } from './types.js';
+import type { AppConfig, ConfigProfile } from './types.js';
 /** Load config from disk. Returns empty config if file doesn't exist. */
 export declare function loadConfig(): AppConfig;
 /** Save config to disk (creates directory if needed). */
@@ -26,9 +25,5 @@ export declare function deleteProfile(name: string): boolean;
 export declare function getProfile(name: string): ConfigProfile | undefined;
 /** List all saved profiles. */
 export declare function listProfiles(): ConfigProfile[];
-/** Save Cloudflare API config. */
-export declare function saveCloudflareConfig(cf: CloudflareConfig): AppConfig;
-/** Get Cloudflare API config. Returns null if not configured. */
-export declare function getCloudflareConfig(): CloudflareConfig | null;
 /** Get the config file path (for logging/debugging). */
 export declare function getConfigPath(): string;

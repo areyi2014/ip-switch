@@ -1,14 +1,13 @@
 /**
  * Config Store — Persistent JSON configuration storage
  *
- * Stores cloud provider credentials, subdomain bindings, and Cloudflare API config
+ * Stores cloud provider profiles (with per-profile Cloudflare credentials)
  * in a JSON file at ~/.cloud-ip-rotator/config.json
  *
  * File format:
  * {
- *   "cloudflare": { "apiToken": "...", "zoneId": "..." },
  *   "profiles": {
- *     "aws-sg": { "provider": "aws", "region": "...", ... },
+ *     "aws-sg": { "provider": "aws", "region": "...", "cloudflare": { ... }, ... },
  *     ...
  *   }
  * }
@@ -19,7 +18,6 @@ import { join } from 'node:path';
 const CONFIG_DIR = join(homedir(), '.cloud-ip-rotator');
 const CONFIG_FILE = join(CONFIG_DIR, 'config.json');
 const EMPTY_CONFIG = {
-    cloudflare: null,
     profiles: {},
 };
 /** Load config from disk. Returns empty config if file doesn't exist. */
@@ -31,7 +29,6 @@ export function loadConfig() {
         const raw = readFileSync(CONFIG_FILE, 'utf-8');
         const data = JSON.parse(raw);
         return {
-            cloudflare: data.cloudflare ?? null,
             profiles: data.profiles ?? {},
         };
     }
@@ -68,17 +65,6 @@ export function getProfile(name) {
 /** List all saved profiles. */
 export function listProfiles() {
     return Object.values(loadConfig().profiles);
-}
-/** Save Cloudflare API config. */
-export function saveCloudflareConfig(cf) {
-    const config = loadConfig();
-    config.cloudflare = cf;
-    saveConfig(config);
-    return config;
-}
-/** Get Cloudflare API config. Returns null if not configured. */
-export function getCloudflareConfig() {
-    return loadConfig().cloudflare;
 }
 /** Get the config file path (for logging/debugging). */
 export function getConfigPath() {

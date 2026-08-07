@@ -113,11 +113,15 @@ export interface ConfigProfile {
     subdomain: string;
     /** Whether Cloudflare proxy is enabled for this subdomain */
     proxied: boolean;
+    /**
+     * Profile-specific Cloudflare credentials.
+     * When set, these override the global Cloudflare config for DNS updates
+     * on this profile's subdomain.
+     */
+    cloudflare?: CloudflareConfig;
 }
 /** Full application config persisted to disk */
 export interface AppConfig {
-    /** Cloudflare API config (shared across all profiles) */
-    cloudflare: CloudflareConfig | null;
     /** Saved cloud provider profiles, keyed by name */
     profiles: Record<string, ConfigProfile>;
 }
