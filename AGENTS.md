@@ -1,4 +1,4 @@
-# AGENTS.md — cloud-ip-rotator-mcp
+# AGENTS.md -—- cloud-ip-rotator-mcp
 
 > 本文件供 AI Agent 读取，记录项目约定与使用方式。跟随代码仓库走，跨平台通用。
 
