@@ -31,7 +31,7 @@ cloud-ip-rotator-mcp/
 │   ├── azure-config.html # Azure 独立表单
 │   ├── oci-config.html   # OCI 独立表单
 │   ├── vultr-config.html # Vultr 独立表单
-│   └── server.cjs        # 本地配置服务器（端口 8787）
+│   └── server.cjs        # 本地配置服务器（系统自动分配端口）
 └── dist/                 # 编译输出
 ```
 
@@ -91,7 +91,7 @@ cd ui
 node server.cjs
 ```
 
-服务运行在 `http://localhost:8787`，提供：
+服务运行在 `http://127.0.0.1:<端口>`（端口由系统自动分配，启动时终端输出），提供：
 - `GET /` — 配置表单页面
 - `GET /api/config` — 读取当前配置
 - `POST /api/save-config` — 保存配置（合并写入 config.json）
@@ -100,7 +100,7 @@ node server.cjs
 ### 打开方式
 
 ```
-http://localhost:8787/
+http://127.0.0.1:<端口>/
 ```
 
 或直接打开 `ui/config-form.html` 文件（此时保存走剪贴板兜底）。
