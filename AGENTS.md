@@ -53,7 +53,7 @@ node dist/index.js
 
 ## 配置文件
 
-路径：`~/.cloud-ip-rotator/config.json`（即 `C:\Users\<用户名>\.cloud-ip-rotator\config.json`）
+路径：`~/.ip-switch/config.json`（即 `C:\Users\<用户名>\.ip-switch\config.json`）
 
 结构：
 ```json
