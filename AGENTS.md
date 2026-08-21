@@ -1,4 +1,4 @@
-# AGENTS.md -—- cloud-ip-rotator-mcp
+# AGENTS.md -—- ip-switch
 
 > 本文件供 AI Agent 读取，记录项目约定与使用方式。跟随代码仓库走，跨平台通用。
 
@@ -11,7 +11,7 @@
 ## 项目结构
 
 ```
-cloud-ip-rotator-mcp/
+ip-switch/
 ├── src/
 │   ├── index.ts          # MCP Server 入口（stdio 传输）
 │   ├── tools.ts          # 14 个 MCP 工具定义
@@ -53,7 +53,7 @@ node dist/index.js
 
 ## 配置文件
 
-路径：`~/.cloud-ip-rotator/config.json`（即 `C:\Users\<用户名>\.cloud-ip-rotator\config.json`）
+路径：`~/.ip-switch/config.json`（即 `C:\Users\<用户名>\.ip-switch\config.json`）
 
 结构：
 ```json

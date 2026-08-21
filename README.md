@@ -1,6 +1,6 @@
 # ip-switch
 
-对多个云公网IP轻松轮换的 AI Agent插件 —— 一键批量轮换 AWS / Azure / Oracle / Vultr 云服务器公网 IP，并同步更新域名解析，免除了多个网络平台登录与配置的繁琐操作。
+对多个云公网IP轻松轮换的 AI Agent插件 —— 一键批量轮换云服务器公网IP（AWS / Azure / Oracle / Vultr），并同步更新域名解析，免除了多个网络平台登录与配置的繁琐操作。
 
 支持平台：Workbuddy + AWS / Azure / Oracle OCI / Vultr + Cloudflare DNS
 
@@ -45,7 +45,7 @@ bash install-cloud-ip-rotator.sh
 
 # ip-switch 安装指南
 
-对多个云公网 IP 轮换的 MCP 服务 —— 让 AI Agent 一键批量轮换 AWS / Azure / OCI / Vultr 云服务器公网 IP，并同步更新域名解析。
+对多个云公网 IP 轮换的 MCP 服务 —— 让 AI Agent 一键批量轮换云服务器公网IP（AWS / Azure / OCI / Vultr），并同步更新域名解析。
 
 ---
 
@@ -74,7 +74,8 @@ bash install-cloud-ip-rotator.sh
 | Node.js   | >= 18   | 需要原生 `fetch` API（Node 18+）  |
 | npm       | >= 9    | 随 Node.js 一起安装               |
 | git       | 任意版本  | 用于克隆仓库；缺失时脚本可自动安装 |
-| 操作系统   | -       | macOS 14+, Ubuntu 20.04+, Windows 10+ |
+| OS        | -       | macOS 14+, Ubuntu 20.04+, Windows 10+ |
+| Software  | -       | Workbuddy 1.1.0+|
 
 ---
 
