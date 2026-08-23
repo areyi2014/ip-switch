@@ -2,7 +2,7 @@
  * Config Store — Persistent JSON configuration storage
  *
  * Stores cloud provider profiles (with per-profile Cloudflare credentials)
- * in a JSON file at ~/.cloud-ip-rotator/config.json
+ * in a JSON file at ~/.ip-switch/config.json
  *
  * File format:
  * {

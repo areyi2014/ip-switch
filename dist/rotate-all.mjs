@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import { getAdapter } from './router.js';
 import { updateDns } from './adapters/cloudflare.js';
 
-const CONFIG_FILE = join(homedir(), '.cloud-ip-rotator', 'config.json');
+const CONFIG_FILE = join(homedir(), '.ip-switch', 'config.json');
 
 const config = JSON.parse(readFileSync(CONFIG_FILE, 'utf-8'));
 const profiles = Object.values(config.profiles);
