@@ -1,0 +1,8 @@
+{
+  "name": "ip-switch",
+  "version": "1.0.0",
+  "description": "My custom plugin",
+  "main": "dist/index.js",
+  "activation": "openai",
+  "api": "openai-plugin"
+}
