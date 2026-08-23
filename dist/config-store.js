@@ -2,7 +2,7 @@
  * Config Store — Persistent JSON configuration storage
  *
  * Stores cloud provider profiles (with per-profile Cloudflare credentials)
- * in a JSON file at ~/.cloud-ip-rotator/config.json
+ * in a JSON file at ~/.ip-switch/config.json
  *
  * File format:
  * {
@@ -15,7 +15,7 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
-const CONFIG_DIR = join(homedir(), '.cloud-ip-rotator');
+const CONFIG_DIR = join(homedir(), '.ip-switch');
 const CONFIG_FILE = join(CONFIG_DIR, 'config.json');
 const EMPTY_CONFIG = {
     profiles: {},

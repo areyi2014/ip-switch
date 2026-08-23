@@ -15,7 +15,7 @@
  *   2. 在 AI Agent 的 MCP 配置中添加：
  *      {
  *        "mcpServers": {
- *          "cloud-ip-rotator": {
+ *          "ip-switch": {
  *            "command": "node",
  *            "args": ["/path/to/ip-switch/dist/index.js"]
  *          }
