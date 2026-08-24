@@ -1,0 +1,20 @@
+{
+  "name": "ip-switch",
+  "interface": {
+    "displayName": "IP Switch Marketplace"
+  },
+  "plugins": [
+    {
+      "name": "ip-switch",
+      "source": {
+        "source": "local",
+        "path": "./plugins/ip-switch"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Developer Tools"
+    }
+  ]
+}
