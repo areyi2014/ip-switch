@@ -1,7 +1,7 @@
 {
   "name": "ip-switch",
   "version": "1.0.0",
-  "description": "Multi-cloud public IP rotation MCP server with Cloudflare DNS auto-update",
+  "description": "Multi-cloud public IP switch MCP server with Cloudflare DNS auto-update",
   "author": {
     "name": "areyi2014",
     "url": "https://github.com/areyi2014/ip-switch"
@@ -11,7 +11,7 @@
   "license": "MIT",
   "keywords": [
     "mcp",
-    "ip-rotation",
+    "ip-switch",
     "cloud",
     "aws",
     "azure",
@@ -23,8 +23,8 @@
   "mcpServers": "./.mcp.json",
   "interface": {
     "displayName": "IP Switch",
-    "shortDescription": "Multi-cloud IP rotation & DNS update",
-    "longDescription": "Rotate the public IP of cloud instances across AWS / Azure / Oracle OCI / Vultr and automatically update Cloudflare DNS A records. Exposes 13 MCP tools for one-click IP rotation, instance management, and DNS sync.",
+    "shortDescription": "Multi-cloud IP switch & DNS update",
+    "longDescription": "Switch the public IP of cloud instances across AWS / Azure / Oracle OCI / Vultr and automatically update Cloudflare DNS A records. Exposes 13 MCP tools for one-click IP rotation, instance management, and DNS sync.",
     "developerName": "areyi2014",
     "category": "Developer Tools",
     "capabilities": [
