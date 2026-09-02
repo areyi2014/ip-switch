@@ -28,12 +28,20 @@
 ## install 设计定论
 1. 全局注册写 B 档键（marketplaces.local + plugins.ip-switch@local）到用户级 config.toml → 安全、重启存活，ip-switch 全局可见。
 2. 信任条目（C 档）仅 best-effort：Ensure-CodexTrust 留着无害，不可作持久机制。
-3. 项目级 ~/ip-switch/.codex/config.toml 与 Profile ~/.codex/ip-switch.config.toml 作冗余通道保留。
+3. **项目级 ~/ip-switch/.codex/config.toml 与 Profile ~/.codex/ip-switch.config.toml 已彻底移除**（2026-09-02）：
+   - 生成逻辑从 install.ps1 / install.sh 删除，磁盘上的两份文件也已删除。
+   - 移除理由（均对桌面 UI 零增益）：
+     - 项目级：全局列表不读它；且其信任条目是 C 档（CC Switch 重启即清），脆弱。
+     - Profile：仅 `codex --profile ip-switch` 加载，桌面 `codex app` 不支持 --profile；且"独立文件加载"机制官方文档未规范、未经实证。
+   - 顺带解决了此前"项目级 mcp + 用户级 mcp 同名 → 桌面 MCP 列表 4 vs 3 幽灵计数"的问题。
 4. **用户级 [mcp_servers.ip-switch] 改由 install 脚本幂等追加**（Ensure-CodexUserConfig / ensure_codex_user_config，用脚本已解析的 $codexNode/$distJs 路径）→ 用户级注册不再依赖 CC Switch 是否在跑。
    - A 档细化：该段虽属 CC Switch 重生成的 A 档，但 install 用 `Contains('[mcp_servers.ip-switch]')`/`grep -qF` 幂等守卫：
      - CC Switch 已写入 → 命中跳过（不重复表，CC Switch 版本保留）
      - CC Switch 未跑 → 用户级无此段 → 脚本补写，MCP 列表可见
-   - 项目级模板 ipSwitchConfigBody / ip_switch_config_body 仍不含 mcp 段（避免"4 vs 3"幽灵计数）。
+5. **实测确认（2026-09-02）：桌面版「插件列表/市场」与「MCP 列表」均只读用户级 config.toml（或 --profile），不读项目级。**
+   - 用户删掉用户级 `[marketplaces.local]`+`[plugins."ip-switch@local"]` 后，即便项目级 / Profile 副本仍含这两段，插件列表也看不到 ip-switch；仅 MCP 列表因用户级 `[mcp_servers.ip-switch]` 仍在而可见。
+   - → 用户级注册（Ensure-CodexUserConfig 的 marketplaces + plugins + mcp 三段）是唯一能让桌面 UI 稳定发现 ip-switch 的通道；项目级仅在该目录作为"已信任工作区"打开时生效（且信任条目是 C 档、CC Switch 重启即清），Profile 仅被 `codex --profile` CLI 读取（`codex app` 桌面端不支持 --profile）。
+   - **决议（2026-09-02）：项目级 .codex/config.toml 与 Profile ip-switch.config.toml 均从 install 与磁盘移除，单一事实来源收敛为用户级注册。后续重装后桌面可见性只依赖用户级三段。**
 
 ## 可复现验证手段
 cp ~/.codex/config.toml /tmp/before; taskkill /im cc-switch.exe /f; 重拉起 cc-switch.exe; diff /tmp/before 当前。
