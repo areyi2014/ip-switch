@@ -46,24 +46,35 @@
 ## 可复现验证手段
 cp ~/.codex/config.toml /tmp/before; taskkill /im cc-switch.exe /f; 重拉起 cc-switch.exe; diff /tmp/before 当前。
 
-## ip-switch skill（2026-09-06 新增）
+## ip-switch skill（2026-09-06 新增，2026-09-06 重构）
 
-**架构**：项目内 `skills/ip-switch/` 源码 → install 脚本复制到 `~/.workbuddy/skills/ip-switch/`。
+**架构**：项目内 `<root>/SKILL.md` + `<root>/skill.json` + `<root>/scripts/` → install 脚本复制到 `~/.workbuddy/skills/ip-switch/`，**保留 `scripts/` 子目录**（不展平）。
 
 **核心**：单文件 Node.js 脚本 `open-ui.mjs` 跨平台启动 ui/server.cjs 并打开浏览器。零依赖，幂等复用。
 
 **为什么用 skill 而不是 MCP tool**：MCP tool 是 stdio 通道，不能开浏览器。skill 是 AI Agent 触发浏览器动作的唯一干净路径。
 
 **位置约定**：
-- 项目源码：`skills/ip-switch/`（随仓库发布）
-- 用户级安装：`~/.workbuddy/skills/ip-switch/`（install.sh/.ps1 复制）
-- Codex 镜像：`~/.codex/skills/ip-switch/`（**仅当该目录已存在时**复制，不主动创建避免污染）
+- 项目源码：`<root>/SKILL.md` + `<root>/skill.json` + `<root>/scripts/{_icon.svg, open-ui.mjs, open-ui.sh, open-ui.ps1}`
+- 用户级安装：保留子目录结构：
+  ```
+  ~/.workbuddy/skills/ip-switch/
+  ├── SKILL.md
+  ├── skill.json
+  └── scripts/              ← 保留作为子目录
+      ├── _icon.svg
+      ├── open-ui.mjs        ← 调用入口：node ~/.workbuddy/skills/ip-switch/scripts/open-ui.mjs
+      ├── open-ui.sh
+      └── open-ui.ps1
+  ```
+- Codex 镜像：同上结构（**仅当 `~/.codex/skills` 已存在时**复制）
 - 安装目录标记：`~/.ip-switch/install-dir.txt`（Git Bash 下自动 `/c/...` → `C:\...` 路径归一化）
 
 **install 脚本对 skill 的处理（必须无条件安装）**：
 - 即使用户没装 WorkBuddy 也要装 → 让 Codex/任何终端用户能跑 `node ~/.workbuddy/skills/ip-switch/scripts/open-ui.mjs`
-- install 时用 `cp -R "$src/." "$dest/"`（点号含隐藏文件，_icon.svg 不漏）
-- `find ... -exec chmod +x` 给 .sh / .mjs / .ps1 都加执行位（macOS / Linux / Git Bash 必需）
+- install 时**保留 scripts/ 子目录**：`cp -R "$scripts_src/." "$dest/scripts/"`（不是平铺）
+- `find ... -path "$dest/scripts/*" -exec chmod +x` 给 .sh / .mjs / .ps1 都加执行位（macOS / Linux / Git Bash 必需）
+- **历史踩坑**：早期版本用 `cp -R "$scripts_src/." "$dest/"` 把 scripts/ 内容展平到 skill 根，导致 open-ui.mjs 和 SKILL.md 混在一层。**正确做法：scripts/ 必须保留为子目录**，保留目录语义。
 
 ## Windows 后台进程脱离（通用解法，重要！）
 
