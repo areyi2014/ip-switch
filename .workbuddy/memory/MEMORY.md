@@ -46,9 +46,9 @@
 ## 可复现验证手段
 cp ~/.codex/config.toml /tmp/before; taskkill /im cc-switch.exe /f; 重拉起 cc-switch.exe; diff /tmp/before 当前。
 
-## ip-switch skill（2026-09-06 新增，2026-09-06 重构）
+## ip-switch skill（2026-09-06 新增，2026-09-06 重构，2026-09-07 再次重构）
 
-**架构**：项目内 `<root>/SKILL.md` + `<root>/skill.json` + `<root>/scripts/` → install 脚本复制到 `~/.workbuddy/skills/ip-switch/`，**保留 `scripts/` 子目录**（不展平）。
+**架构**：项目内 `<root>/SKILL.md` + `<root>/skill.json` + `<root>/scripts/` → install 脚本复制到 `~/.workbuddy/skills/ip-switch/scripts/`(保留 `scripts/` 子目录)+ 写 bootstrap 锚点 + 创建项目内 `data/` 运行时目录。
 
 **核心**：单文件 Node.js 脚本 `open-ui.mjs` 跨平台启动 ui/server.cjs 并打开浏览器。零依赖，幂等复用。
 
@@ -65,16 +65,40 @@ cp ~/.codex/config.toml /tmp/before; taskkill /im cc-switch.exe /f; 重拉起 cc
       ├── _icon.svg
       ├── open-ui.mjs        ← 调用入口：node ~/.workbuddy/skills/ip-switch/scripts/open-ui.mjs
       ├── open-ui.sh
-      └── open-ui.ps1
+      ├── open-ui.ps1
+      └── .install-path.txt  ← bootstrap 锚点（install 写入；放 scripts/ 下跟 open-ui.mjs 同目录）
   ```
 - Codex 镜像：同上结构（**仅当 `~/.codex/skills` 已存在时**复制）
-- 安装目录标记：`~/.ip-switch/install-dir.txt`（Git Bash 下自动 `/c/...` → `C:\...` 路径归一化）
+- 项目内运行时目录：`<install-dir>/data/`（**取代之前的 `~/.ip-switch/`**）
+  - `install-dir.txt` — 运行时配置（项目路径，给 --status 查询用）
+  - `config.json` — 凭据配置（ui/server.cjs 写入）
+  - `server-port.txt` — 端口（ui/server.cjs 启动时写入）
+  - `server.pid` — 进程 PID（open-ui.mjs 写入）
+  - `ui-server.{out,err}.log` — server 日志
+
+**bootstrap 三级查找**（open-ui.mjs 找 INSTALL_DIR 的顺序）：
+1. 读 `__dirname/.install-path.txt`（用户级副本模式，install 写入）
+2. 用 `__dirname/..` 推断（项目内副本模式，`<root>/scripts/open-ui.mjs` → `<root>`）
+3. Fallback 到常见路径 `~/ip-switch`、`~/tools/ip-switch`、`C:\ip-switch`、`/opt/ip-switch`
+
+**server.cjs 数据目录**：
+- 优先用环境变量 `IP_SWITCH_DATA_DIR`（open-ui.mjs spawn 时传入）
+- Fallback 到 `path.join(__dirname, '..', 'data')`（基于 ui/ 目录推断）
 
 **install 脚本对 skill 的处理（必须无条件安装）**：
 - 即使用户没装 WorkBuddy 也要装 → 让 Codex/任何终端用户能跑 `node ~/.workbuddy/skills/ip-switch/scripts/open-ui.mjs`
-- install 时**保留 scripts/ 子目录**：`cp -R "$scripts_src/." "$dest/scripts/"`（不是平铺）
-- `find ... -path "$dest/scripts/*" -exec chmod +x` 给 .sh / .mjs / .ps1 都加执行位（macOS / Linux / Git Bash 必需）
-- **历史踩坑**：早期版本用 `cp -R "$scripts_src/." "$dest/"` 把 scripts/ 内容展平到 skill 根，导致 open-ui.mjs 和 SKILL.md 混在一层。**正确做法：scripts/ 必须保留为子目录**，保留目录语义。
+- 创建 `<install-dir>/data/`（`mkdir -p`）+ 写 `data/install-dir.txt`（运行时配置）
+- 复制 `SKILL.md`、`skill.json` → 用户级副本根目录
+- `cp -R "$scripts_src/." "$dest/scripts/"` 保留 scripts/ 子目录
+- 写 `$dest/scripts/.install-path.txt`（bootstrap 锚点，放在 scripts/ 下避免与 SKILL.md 同级混淆）
+- `find "$dest/scripts" -maxdepth 1 -exec chmod +x` 给脚本赋执行位
+- 若 `~/.codex/skills` 已存在，镜像一份
+
+**历史踩坑**：
+1. 早期用 `cp -R "$scripts_src/." "$dest/"` 把 scripts/ 内容展平 → open-ui.mjs 和 SKILL.md 混一层。修复：保留 scripts/ 子目录。
+2. `open-ui.mjs` 用 `~/.ip-switch/install-dir.txt` bootstrap → 2026-09-07 改用 `~/.workbuddy/skills/ip-switch/scripts/.install-path.txt`（用户级副本）+ `__dirname/..`（项目内副本），干掉 `~/.ip-switch/`。
+3. `main()` 里 `const path = PAGE_PATHS[args.page]` 与 `import path from 'node:path'` 同名 → TDZ 错误。修复：变量名改为 `pagePath`。
+4. install 最初把 `.install-path.txt` 写到 skill 根目录，但 open-ui.mjs 读的是 scripts/ 子目录 → 错配。修复：install 改成写到 `scripts/` 下。
 
 ## Windows 后台进程脱离（通用解法，重要！）
 
