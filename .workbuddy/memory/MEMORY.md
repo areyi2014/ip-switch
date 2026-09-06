@@ -45,3 +45,41 @@
 
 ## 可复现验证手段
 cp ~/.codex/config.toml /tmp/before; taskkill /im cc-switch.exe /f; 重拉起 cc-switch.exe; diff /tmp/before 当前。
+
+## ip-switch skill（2026-09-06 新增）
+
+**架构**：项目内 `skills/ip-switch/` 源码 → install 脚本复制到 `~/.workbuddy/skills/ip-switch/`。
+
+**核心**：单文件 Node.js 脚本 `open-ui.mjs` 跨平台启动 ui/server.cjs 并打开浏览器。零依赖，幂等复用。
+
+**为什么用 skill 而不是 MCP tool**：MCP tool 是 stdio 通道，不能开浏览器。skill 是 AI Agent 触发浏览器动作的唯一干净路径。
+
+**位置约定**：
+- 项目源码：`skills/ip-switch/`（随仓库发布）
+- 用户级安装：`~/.workbuddy/skills/ip-switch/`（install.sh/.ps1 复制）
+- Codex 镜像：`~/.codex/skills/ip-switch/`（**仅当该目录已存在时**复制，不主动创建避免污染）
+- 安装目录标记：`~/.ip-switch/install-dir.txt`（Git Bash 下自动 `/c/...` → `C:\...` 路径归一化）
+
+**install 脚本对 skill 的处理（必须无条件安装）**：
+- 即使用户没装 WorkBuddy 也要装 → 让 Codex/任何终端用户能跑 `node ~/.workbuddy/skills/ip-switch/scripts/open-ui.mjs`
+- install 时用 `cp -R "$src/." "$dest/"`（点号含隐藏文件，_icon.svg 不漏）
+- `find ... -exec chmod +x` 给 .sh / .mjs / .ps1 都加执行位（macOS / Linux / Git Bash 必需）
+
+## Windows 后台进程脱离（通用解法，重要！）
+
+**坑**：`spawn(..., {detached: true, stdio: 'ignore'}).unref()` 在 Windows 上**不够**——子进程会被父进程的 job 对象回收，父进程退出子进程死。
+
+**正解（跨平台）**：
+```js
+if (process.platform === 'win32') {
+  // cmd /c start /B 完全脱离父进程（新进程组，无 job 继承）
+  spawn('cmd.exe', ['/c', 'start', '/B', process.execPath, 'script.js'], {
+    detached: true, stdio: 'ignore', windowsHide: true
+  }).unref();
+} else {
+  // macOS / Linux：detached + unref 即可（POSIX setsid 等价）
+  spawn(process.execPath, ['script.js'], { detached: true, stdio: 'ignore' }).unref();
+}
+```
+
+**特征**：open-ui.mjs 退出后，UI server.cjs 仍在跑。验证方式：起 server → 脚本退出 → `curl 127.0.0.1:<port>` 仍 200。
