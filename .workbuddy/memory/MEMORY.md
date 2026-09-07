@@ -118,3 +118,62 @@ if (process.platform === 'win32') {
 ```
 
 **特征**：open-ui.mjs 退出后，UI server.cjs 仍在跑。验证方式：起 server → 脚本退出 → `curl 127.0.0.1:<port>` 仍 200。
+
+## Windows 零窗口三层方案（外行用户场景）
+
+外行手动跑 `node ...open-ui.mjs aws` 会看到 [INFO] 日志 + 可能闪一下 cmd 窗口 → "以为是病毒"。三层防线按推荐度排序：
+
+**Layer 1（首选）—— `open-ui.vbs` 桌面入口**（2026-09-07 新增）：
+- WScript.Shell 用 `WindowStyle=0` + `bWaitOnReturn=False` 调用 `node ... --quiet`
+- wscript.exe 是 GUI subsystem → node 子进程无 console → 整条链路零窗口
+- 参数透传：双击无参 = 全功能表单；`wscript open-ui.vbs aws` = AWS 配置页
+- 路径转义：`Replace(mjsPath, "\", "\\")`（VBScript Shell.Run 字符串解析需要）
+- 自动启用 `--quiet`：vbs 内部拼 `node "..." --quiet [用户参数]`
+- 不创建桌面快捷方式（让用户自己右键"发送到桌面"，避免 install 做错）
+
+**Layer 2 —— `nodew.exe` 自动检测**（spawn server 子进程时）：
+- `nodew.exe` 是 Node 官方 Windows 安装包自带的 GUI subsystem 版本，与 `node.exe` 同目录
+- 检测：`fs.existsSync(path.join(path.dirname(process.execPath), 'nodew.exe'))`
+- 优先用 nodew.exe 启动 server.cjs → 彻底无 console
+- 用户机器若无 nodew.exe（便携版 Node）→ fallback 到 node.exe + windowsHide: true
+
+**Layer 3 —— `windowsHide: true` 兜底**：
+- Node.js 内部用 `CREATE_NO_WINDOW` 标志
+- 对 GUI subsystem 程序（nodew.exe）有效；对 console subsystem（node.exe）可能仍闪一下
+
+## open-ui.mjs 改造（2026-09-07）
+
+- 加 `--quiet` / `-q` 选项：log 只写文件，不打印 stderr
+- 日志：**默认双写 stderr + `<install-dir>/data/open-ui.log`**（同步 `fs.appendFileSync`，不能用 WriteStream —— 进程立即 exit 会丢缓冲）
+- spawn server 优先用 nodew.exe
+- vbs 文件由 install 脚本的 `cp -R "$scripts_src/." "$dest/scripts/"` 自动复制，无需改 install
+
+## 教训（必须遵守）
+
+1. **Edit 工具返回 "Successfully edited" 不等于真改了**！必须**立即 grep 验证**。
+   经验：本轮我 Edit 了 log 块，工具说成功但文件未改 → 后续 `--status` 报 `_quietMode is not defined` TDZ 才发现。下次：每次 Edit 后必须 grep 确认改动真的落地。
+2. **fs.createWriteStream 在进程立即 exit 时丢日志**。小日志量场景直接用 `fs.appendFileSync`（每次几行无性能问题）。
+3. **VBScript Shell.Run 字符串里的 `\` 必须转义成 `\\`**。否则路径里含空格或反斜杠时会出错。
+
+## 安装后用户调用方式（按用户友好度排序）
+
+| 用户类型 | 推荐调用 | 是否弹窗 |
+|----------|---------|----------|
+| 外行 / 桌面用户 | 双击 `open-ui.vbs` 或桌面快捷方式 | **零窗口** |
+| 终端熟练 | `node ~/.workbuddy/skills/ip-switch/scripts/open-ui.mjs aws` | 用户终端可见 |
+| AI agent (WorkBuddy/Codex) | `node .../open-ui.mjs aws`（child_process spawn，无 console） | 零窗口（agent 自己没 console） |
+| 静默调用 | 加 `--quiet` / `-q` | log 只写文件 |
+
+**用户级副本布局**（install 后）：
+```
+~/.workbuddy/skills/ip-switch/
+├── SKILL.md
+├── skill.json
+└── scripts/                ← scripts/ 作为子目录保留
+    ├── _icon.svg
+    ├── open-ui.mjs         ← 主入口
+    ├── open-ui.sh          ← bash wrapper（可选）
+    ├── open-ui.ps1         ← PowerShell wrapper（可选）
+    ├── open-ui.vbs         ← Windows GUI 入口（外行用，零窗口）
+    └── .install-path.txt   ← bootstrap 锚点（install 写入）
+```
