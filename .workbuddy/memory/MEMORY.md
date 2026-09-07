@@ -119,6 +119,48 @@ if (process.platform === 'win32') {
 
 **特征**：open-ui.mjs 退出后，UI server.cjs 仍在跑。验证方式：起 server → 脚本退出 → `curl 127.0.0.1:<port>` 仍 200。
 
+## Windows 零窗口三层方案（2026-09-07）
+
+按推荐顺序：
+
+1. **Layer 1（外行首选）—— `scripts/open-ui.vbs`**（48 行 Windows GUI 入口）
+   - `WScript.Shell.Run "node ... --quiet", 0, False`（WindowStyle=0 隐藏 + 异步不阻塞）
+   - 路径 `\` 转 `\\`（VBScript 字符串解析要求）
+   - 自动启用 `--quiet`
+   - install 用 `cp -R "$scripts_src/." "$dest/scripts/"` 整目录 copy → **新 vbs 自动包含，无需改 install**
+
+2. **Layer 2 —— open-ui.mjs spawn server 时检测 `nodew.exe`**
+   - `path.join(path.dirname(process.execPath), 'nodew.exe')`
+   - nodew.exe 是 Node 官方 Windows 安装包自带的 GUI subsystem 版本
+   - 有则用之（彻底无 console），无则 fallback 到 `windowsHide: true`
+
+3. **Layer 3 —— `windowsHide: true` 兜底**
+   - Node 内部用 `CREATE_NO_WINDOW` 标志，但 node.exe 是 console subsystem，可能闪一下
+
+## open-ui.mjs 改造（2026-09-07）
+
+- 加 `--quiet` / `-q` 选项（vbs 内部强制启用）
+- 日志：默认双写（stderr + `<install-dir>/data/open-ui.log` 带 ISO timestamp），--quiet 只写文件
+- **实现用 `fs.appendFileSync`（同步写）**——关键：不能用 WriteStream，进程立即 exit 时异步 flush 会丢日志
+- spawn server 优先 `nodew.exe`
+
+## Codex 章节（2026-09-07）
+
+SKILL.md §6 改为通用表格（占位符 `<skill-root>`）+ §6.1 Codex 用户视角（桌面端 / CLI / 手动）。install 时镜像到 `~/.codex/skills/ip-switch/`（仅当 `~/.codex/skills` 已存在）。
+
+| Agent | skill 根 |
+|-------|---------|
+| WorkBuddy | `~/.workbuddy/skills/ip-switch/` |
+| Codex 桌面端/CLI | `~/.codex/skills/ip-switch/` |
+| 项目内原件（兜底） | `<install-dir>/scripts/` |
+
+**Codex 桌面端用户**根本不需要敲命令——在 Codex 对话框里说"打开 ip-switch 配置页"，AI 自动跑脚本。
+
+## 关键教训（2026-09-07）
+
+1. **Edit 工具可能撒谎**——返回 "Successfully edited" 但文件未改。**Edit 后必须立即 grep 验证**，不能信工具的成功提示
+2. **fs.createWriteStream 在进程立即 exit 时丢日志**——改 `fs.appendFileSync` 同步写
+
 ## Windows 零窗口三层方案（外行用户场景）
 
 外行手动跑 `node ...open-ui.mjs aws` 会看到 [INFO] 日志 + 可能闪一下 cmd 窗口 → "以为是病毒"。三层防线按推荐度排序：
