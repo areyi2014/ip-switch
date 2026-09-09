@@ -1,0 +1,79 @@
+﻿提示用户先安装软件，检查path路径	Prompt user to install software first and check PATH
+获取各种版本的nodejs，将版本号最大的nodejs指定为默认nodejs	Detect all nodejs versions and set the highest one as default
+如果此三项有缺失，请查看CC Switch 的 该模型的公共配置	If any of these three items are missing, check the model's shared config in CC Switch
+去掉项目级和用户级配置文件的区别	Remove distinction between project-level and user-level config files
+在mcp_server配置不存在时，用户级toml文件中mcp_server配置项是从markertplaces取出来的	When mcp_server config is absent, the user-level toml mcp_server entry is taken from marketplaces
+在codex的启动参数中使用-c key=value，不在.toml文件中填写相应参数	Pass parameters via codex -c key=value instead of writing them into the .toml file
+创建桌面快捷方式，点击图标加载mcp服务	Create desktop shortcut that loads the MCP service on click
+cc-switch会重置项目级信任配置，需保留用户级配置	cc-switch resets project-level trust config; keep user-level config
+插件只装清单、MCP 直接跑源码用户目录下的dist	Plugin installs manifest only; MCP runs the dist source in the user directory directly
+清理旧版 ~/.codex/plugins/ip-switch 残留	Clean up legacy ~/.codex/plugins/ip-switch leftovers
+1，在git clone执行前执行ping; 2，尝试执行git clone三遍	1. Run ping before git clone; 2. Retry git clone up to 3 times
+将github.com替换为gitee.com，方便国内国外下载	Replace github.com with gitee.com for downloads in and outside China
+如果mcp-config.json存在，就跳过创建操作	Skip creation if mcp-config.json already exists
+对于已经运行的codex/workbuddy重启生效	Restart running codex/workbuddy for changes to take effect
+沙箱模式下不能在网页模式中启动服务	Cannot start the web service in sandbox mode
+移植数据目录到安装目录下	Move data directory into the installation directory
+Ensure-CodexUserConfig改为Append-CodexUserConfig	Rename Ensure-CodexUserConfig to Append-CodexUserConfig
+去掉项目级和profile级配置文件	Remove project-level and profile-level config files
+nodejs/npm与客户端无关	nodejs/npm are unrelated to the client
+config.toml 的 [mcp_servers.ip-switch]	[mcp_servers.ip-switch] section in config.toml
+修改workbuddy和codex的处理流程	Update workbuddy and codex handling flow
+重写为 UTF-8 with BOM	Rewrite as UTF-8 with BOM
+marketplace的path指向当前目录	Point marketplace path to the current directory
+创建codex桌面快捷方式的方法	How to create a codex desktop shortcut
+测试多个远程仓库4	Test multiple remotes 4
+测试多个远程仓库3	Test multiple remotes 3
+测试多个远程仓库2	Test multiple remotes 2
+恢复【写入config.toml】	Restore write-to-config.toml
+取消【写入config.toml】	Disable write-to-config.toml
+测试多个远程仓库	Test multiple remotes
+marketplace注册已移至 Profile 叠加层	Marketplace registration moved to the Profile overlay
+市场注册已移至 Profile 叠加层	Marketplace registration moved to the Profile overlay
+codex桌面启动说明	codex desktop launch instructions
+codex桌面启动脚本	codex desktop launch script
+mcp.json文件内容直接追加配置	Append config directly into mcp.json
+增加nodejs的路径检测	Add nodejs path detection
+修复codex下nodejs路径	Fix nodejs path under codex
+ip-switch-node改为nodejs	Rename ip-switch-node to nodejs
+去掉mcp_servers.ip-switch	Remove mcp_servers.ip-switch
+ccswitch影响的toml配置项	toml config entries affected by cc-switch
+补充mcp_server	Add mcp_server configuration
+codex信任补写	Backfill codex trust configuration
+codex相关配置整理	Reorganize codex-related configuration
+找到并安装NPM	Locate and install NPM
+黑色弹窗一闪而过	Fix black console window flash
+codex个人市场	codex personal marketplace
+检测到agent目录	Detect the agent directory
+修改workbuddy函数名	Rename workbuddy function
+修改plugin.json的注释	Update plugin.json comments
+挪动targetDir位置	Move targetDir location
+修改函数注释	Update function comments
+修改市场名	Rename marketplace
+调整安装目录	Adjust installation directory
+整理MD文件内容	Reorganize markdown content
+补充md文件	Add markdown documentation
+压缩文件流程	Streamline file compression process
+把InstallDir替换为srcDir	Replace InstallDir with srcDir
+制作codex插件	Build codex plugin
+添加skill功能	Add skill support
+删除无用文件	Remove unused files
+去掉无用文件	Remove unused files
+修改仓库地址	Update repository URL
+改变git地址	Change git URL
+补充执行环境	Add execution environment setup
+去掉codex部分相关文档	Remove some codex-related docs
+添加修改readme文件	Add and update readme file
+添加mcp服务配置项	Add MCP service config entries
+完善git软件自动下载	Improve automatic git download
+git错误信息输出	Output git error messages
+提示用户	Prompt the user
+完善安装程序	Improve installer
+自动部署	Auto deploy
+各个AGENT共享的技能	Skills shared by all agents
+完善表单提交功能	Improve form submission
+调整内嵌的提交页面	Adjust embedded submission page
+完善网页提交功能	Improve web submission
+支持页面表单，支持ip更新	Support web form and IP update
+修改地址	Update URL
+git忽略的新目录	Add new directories to gitignore
