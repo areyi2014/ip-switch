@@ -77,3 +77,5 @@ git错误信息输出	Output git error messages
 支持页面表单，支持ip更新	Support web form and IP update
 修改地址	Update URL
 git忽略的新目录	Add new directories to gitignore
+Prompt the user先安装软件，检查path路径	Prompt user to install software first and check PATH
+1，在git clone执行前执行ping;\n2，尝试执行git clone三遍	1. Run ping before git clone; 2. Retry git clone up to 3 times
