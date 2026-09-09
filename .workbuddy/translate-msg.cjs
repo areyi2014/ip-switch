@@ -4,7 +4,10 @@ const pairs = fs.readFileSync(mapPath, 'utf8')
   .split('\n')
   .filter(l => l.includes('\t'))
   .map(l => { const i = l.indexOf('\t'); return [l.slice(0, i), l.slice(i + 1)]; })
-  .map(([from, to]) => [from.split('\\n').join('\n'), to.split('\\n').join('\n')]);
+  .map(([from, to]) => [
+    from.split('\\n').join('\n').split('\\r').join('\r'),
+    to.split('\\n').join('\n').split('\\r').join('\r'),
+  ]);
 let data = '';
 process.stdin.on('data', d => { data += d; });
 process.stdin.on('end', () => {
