@@ -1,4 +1,5 @@
 node_modules/
 dist/
+.mcp.json
 # 运行时数据（云厂商凭据配置 / server 端口/PID/日志）——绝不提交
 data/
